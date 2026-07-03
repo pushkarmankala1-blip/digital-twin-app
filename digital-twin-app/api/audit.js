@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
             // Chop the massive documents into bite-sized chunks
             const chunks = allText.split('\n\n').filter(c => c.trim().length > 100);
-            const embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+            const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
             let vectorsToUpload = [];
             
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
         // =================================================================
         
         // 1. Turn your new question into a math vector
-        const embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+        const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
         const promptEmbed = await embeddingModel.embedContent(userPrompt);
 
         // 2. Search Pinecone for the 3 most mathematically relevant pieces of data
