@@ -161,6 +161,47 @@
         }
     }
 </script>
+<script>
+  async function runAudit() {
+    // 1. Grab the button and the text boxes on your screen
+    const button = document.querySelector('button');
+    const responseArea = document.getElementById('response-area');
+    const userPrompt = document.getElementById('prompt').value;
 
+    // 2. TURN ON THE LOADING STATE (Happens instantly when clicked)
+    button.innerText = "Auditing Network Mechanics...";
+    button.disabled = true; // Locks the button so they can't spam click it
+    responseArea.style.display = "block"; // Makes the hidden response box visible
+    responseArea.innerText = "Querying vector database... this takes a few seconds.";
+
+    try {
+      // 3. Send the data to your Vercel backend
+      const response = await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userPrompt })
+      });
+      
+      const data = await response.json();
+
+      // 4. TURN OFF THE LOADING STATE (Happens when the AI finishes)
+      button.innerText = "Run System Audit";
+      button.disabled = false; // Unlocks the button
+      
+      // 5. Show the actual final AI answer on the screen
+      if (data.reply) {
+          responseArea.innerText = data.reply;
+      } else {
+          responseArea.innerText = "Error: " + data.error;
+      }
+
+    } catch (error) {
+      // If the internet drops or something crashes, reset the button
+      button.innerText = "Run System Audit";
+      button.disabled = false;
+      responseArea.innerText = "Connection failed. Please try again.";
+    }
+  }
+</script>
 </body>
 </html>
