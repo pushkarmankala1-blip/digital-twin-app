@@ -119,8 +119,11 @@ ${relevantContext}`;
         
         return res.status(200).json({ reply: finalResult.response.text() });
 
-    } catch (error) {
+} catch (error) {
         console.error("CRITICAL FAILURE:", error);
-        return res.status(500).json({ error: "System Error. Check Vercel Logs." });
+        // Force the app to send the EXACT error message to the browser, not just "System Error"
+        return res.status(500).json({ 
+            error: error.message, 
+            stack: error.stack 
+        });
     }
-}
