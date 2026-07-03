@@ -97,7 +97,7 @@ export default async function handler(req, res) {
         const relevantContext = searchResults.matches.map(match => match.metadata.text).join("\n\n---\n\n");
 
         // 4. Build the micro-payload for Gemini
-const systemInstruction = `You are a strategic business advisor. 
+        const systemInstruction = `You are a strategic business advisor. 
 You are given specific network scaling laws as context, but you must make them practical.
 
 RULE: Never use jargon without explaining it in one simple sentence.
@@ -119,7 +119,7 @@ ${relevantContext}`;
         
         return res.status(200).json({ reply: finalResult.response.text() });
 
-} catch (error) {
+    } catch (error) {
         console.error("CRITICAL FAILURE:", error);
         // Force the app to send the EXACT error message to the browser, not just "System Error"
         return res.status(500).json({ 
@@ -127,3 +127,4 @@ ${relevantContext}`;
             stack: error.stack 
         });
     }
+} // <--- Added this vital final brace to close out the handler function!
