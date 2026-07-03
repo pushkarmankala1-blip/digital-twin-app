@@ -109,15 +109,35 @@ STRUCTURE:
 CONTEXT: 
 ${relevantContext}`;
 
-        // 5. Send the tiny payload to Gemini 2.5 Flash
+// 5. Send the tiny payload to Gemini 2.5 Flash
         const aiModel = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash",
             systemInstruction: systemInstruction 
         });
 
         const finalResult = await aiModel.generateContent(userPrompt);
+        const fullAIResponse = finalResult.response.text();
+
+        // 1. Log the internal monologue to your private Vercel Dashboard logs (Hidden from customer)
+        console.log("--- PRIVATE AGENT MONOLOGUE --- \n", fullAIResponse);
+
+        // 2. Chop the text to isolate ONLY what comes after the marker
+        let cleanUserReply = fullAIResponse;
         
-        return res.status(200).json({ reply: finalResult.response.text() });
+        if (fullAIResponse.includes('[FINAL_OUTPUT]')) {
+            cleanUserReply = fullAIResponse.split('[FINAL_OUTPUT]')[1];
+        } else if (fullAIResponse.includes('FINAL_OUTPUT')) {
+            cleanUserReply = fullAIResponse.split('FINAL_OUTPUT')[1];
+        } else {
+            // Fallback: If the AI completely forgets the marker, look for the start of your format
+            const backupSplit = fullAIResponse.search(/1\.\s*THE\s*INSIGHT/i);
+            if (backupSplit !== -1) {
+                cleanUserReply = fullAIResponse.substring(backupSplit);
+            }
+        }
+        
+        // 3. Return ONLY the polished, user-facing text to the browser
+        return res.status(200).json({ reply: cleanUserReply.trim() });
 
     } catch (error) {
         console.error("CRITICAL FAILURE:", error);
