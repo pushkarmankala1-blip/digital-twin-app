@@ -1,6 +1,9 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// A simple function to pause the code and prevent 429 Rate Limit errors
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 export default async function handler(req, res) {
     // Only allow POST requests
     if (req.method !== 'POST') {
@@ -9,7 +12,7 @@ export default async function handler(req, res) {
 
     const userPrompt = req.body.prompt;
     
-    // Connect to Vercel's secure environment variables (NO HARDCODED KEYS HERE!)
+    // Connect to Vercel's secure environment variables
     const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     
@@ -29,11 +32,13 @@ export default async function handler(req, res) {
 
             // Chop the massive documents into bite-sized chunks
             const chunks = allText.split('\n\n').filter(c => c.trim().length > 100);
+            
+            // Using the newest, 3072-dimension flagship model
             const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
             let vectorsToUpload = [];
             
-            // Convert text to math vectors
+            // Convert text to math vectors (with a speed limit!)
             for (let i = 0; i < chunks.length; i++) {
                 const chunkText = chunks[i];
                 const embedResult = await embeddingModel.embedContent(chunkText);
@@ -43,6 +48,9 @@ export default async function handler(req, res) {
                     values: embedResult.embedding.values,
                     metadata: { text: chunkText }
                 });
+                
+                // The Magic Fix: Pause for 1.5 seconds between each request to Google
+                await delay(1500); 
             }
 
             // Upload everything to Pinecone
