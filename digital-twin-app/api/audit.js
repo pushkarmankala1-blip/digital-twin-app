@@ -50,7 +50,7 @@ export default async function handler(req, res) {
                 });
                 
                 // The Magic Fix: Pause for 1.5 seconds between each request to Google
-                await delay(1500); 
+                await delay(4500); 
             }
 
             // Upload everything to Pinecone
