@@ -1,7 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// A simple function to pause the code and prevent 429 Rate Limit errors
+// A simple function to pause the code
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default async function handler(req, res) {
@@ -38,19 +38,39 @@ export default async function handler(req, res) {
 
             let vectorsToUpload = [];
             
-            // Convert text to math vectors (with a speed limit!)
+            // Convert text to math vectors (with Smart Retries!)
             for (let i = 0; i < chunks.length; i++) {
                 const chunkText = chunks[i];
-                const embedResult = await embeddingModel.embedContent(chunkText);
-                
-                vectorsToUpload.push({
-                    id: `chunk_${i}`,
-                    values: embedResult.embedding.values,
-                    metadata: { text: chunkText }
-                });
-                
-                // The Magic Fix: Pause for 1.5 seconds between each request to Google
-                await delay(5000); 
+                let success = false;
+                let retries = 0;
+
+                while (!success && retries < 3) {
+                    try {
+                        const embedResult = await embeddingModel.embedContent(chunkText);
+                        
+                        vectorsToUpload.push({
+                            id: `chunk_${i}`,
+                            values: embedResult.embedding.values,
+                            metadata: { text: chunkText }
+                        });
+                        
+                        success = true; // It worked, break the while loop
+                        
+                        // A smaller, normal speed bump to be polite
+                        await delay(2000); 
+
+                    } catch (error) {
+                        // If Google throws the 429 error, catch it and take a deep breath
+                        if (error.status === 429) {
+                            console.log(`Chunk ${i} hit a speed limit! Pausing for 15 seconds...`);
+                            await delay(15000); 
+                            retries++; // Count the strike
+                        } else {
+                            // If it's a completely different error, crash normally
+                            throw error; 
+                        }
+                    }
+                }
             }
 
             // Upload everything to Pinecone
