@@ -131,32 +131,33 @@
 
 <script>
   async function runAudit() {
-    // 1. Grab the button and the text boxes on your screen
     const button = document.querySelector('button');
     const responseArea = document.getElementById('response-area');
     const userPrompt = document.getElementById('prompt').value;
 
-    // 2. TURN ON THE LOADING STATE (Happens instantly when clicked)
     button.innerText = "Auditing Network Mechanics...";
-    button.disabled = true; // Locks the button so they can't spam click it
-    responseArea.style.display = "block"; // Makes the hidden response box visible
+    button.disabled = true; 
+    responseArea.style.display = "block"; 
     responseArea.innerText = "Querying vector database... this takes a few seconds.";
 
     try {
-      // 3. Send the data to your Vercel backend
       const response = await fetch('/api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userPrompt })
       });
       
+      // NEW: If the server returns a 504 Timeout or 500 Error, catch it here!
+      if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server Error ${response.status}: ${errorText}`);
+      }
+
       const data = await response.json();
 
-      // 4. TURN OFF THE LOADING STATE (Happens when the AI finishes)
       button.innerText = "Run System Audit";
-      button.disabled = false; // Unlocks the button
+      button.disabled = false; 
       
-      // 5. Show the actual final AI answer on the screen
       if (data.reply) {
           responseArea.innerText = data.reply;
       } else {
@@ -164,10 +165,11 @@
       }
 
     } catch (error) {
-      // If the internet drops or something crashes, reset the button
+      // NEW: Print the EXACT error to the screen and the console
+      console.error("System Crash:", error);
       button.innerText = "Run System Audit";
       button.disabled = false;
-      responseArea.innerText = "Connection failed. Please try again.";
+      responseArea.innerText = "🚨 Critical Failure: " + error.message;
     }
   }
 </script>
