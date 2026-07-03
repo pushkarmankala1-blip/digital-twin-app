@@ -1,0 +1,9 @@
+{
+  "name": "digital-twin-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@pinecone-database/pinecone": "^3.0.0",
+    "@google/generative-ai": "^0.14.0"
+  }
+}
