@@ -130,38 +130,6 @@
 </div>
 
 <script>
-    async function runAudit() {
-        const prompt = document.getElementById('prompt').value;
-        const responseBox = document.getElementById('responseBox');
-        const loading = document.getElementById('loading');
-
-        if (!prompt.trim()) return;
-
-        responseBox.style.display = 'none';
-        loading.style.display = 'block';
-
-        try {
-            // This calls your Vercel backend
-            const res = await fetch('/api/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt })
-            });
-            
-            const data = await res.json();
-            
-            loading.style.display = 'none';
-            responseBox.innerText = data.reply || "Error: No response generated.";
-            responseBox.style.display = 'block';
-
-        } catch (error) {
-            loading.style.display = 'none';
-            responseBox.innerText = "System Failure. Could not connect to the API.";
-            responseBox.style.display = 'block';
-        }
-    }
-</script>
-<script>
   async function runAudit() {
     // 1. Grab the button and the text boxes on your screen
     const button = document.querySelector('button');
