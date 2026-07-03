@@ -97,11 +97,17 @@ export default async function handler(req, res) {
         const relevantContext = searchResults.matches.map(match => match.metadata.text).join("\n\n---\n\n");
 
         // 4. Build the micro-payload for Gemini
-        const systemInstruction = `You are a highly strategic Digital Twin. 
-        Use ONLY the following retrieved context to answer the user's prompt. Do not hallucinate outside information.
-        
-        CONTEXT: 
-        ${relevantContext}`;
+const systemInstruction = `You are a strategic business advisor. 
+You are given specific network scaling laws as context, but you must make them practical.
+
+RULE: Never use jargon without explaining it in one simple sentence.
+STRUCTURE:
+1. THE INSIGHT: Summarize the advice in one plain-English sentence.
+2. THE LOGIC (The "Why"): Briefly explain the law (e.g., "Zipf's Law says small things matter as much as big ones").
+3. THE ACTION: Give the user 2 concrete, step-by-step things to do today.
+
+CONTEXT: 
+${relevantContext}`;
 
         // 5. Send the tiny payload to Gemini 2.5 Flash
         const aiModel = genAI.getGenerativeModel({ 
